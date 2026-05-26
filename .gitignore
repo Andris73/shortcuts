@@ -1,0 +1,9 @@
+# Built artifacts (unsigned) — produced by build.py at the repo root.
+# We don't commit these; the signed copies live in signed/ and are committed by CI.
+/playtomic-login.shortcut
+/padel-code.shortcut
+
+# Python
+__pycache__/
+*.pyc
+.venv/

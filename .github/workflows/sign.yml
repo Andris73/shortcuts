@@ -1,0 +1,68 @@
+name: Build & sign shortcuts
+
+on:
+  push:
+    branches: [master, main]
+    paths-ignore: ['signed/**', 'README.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write       # so the job can push the signed files back
+
+jobs:
+  build-sign-publish:
+    runs-on: macos-latest    # macOS 14+; ships with the `shortcuts` CLI
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build unsigned shortcuts
+        run: python3 build.py
+
+      - name: Sign shortcuts (--mode anyone)
+        run: |
+          mkdir -p signed
+          for f in *.shortcut; do
+            echo "signing $f"
+            shortcuts sign --mode anyone --input "$f" --output "signed/$f"
+          done
+          ls -la signed/
+
+      - name: Write install index
+        env:
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          # URL of the signed files on raw.githubusercontent.com
+          BASE="https://raw.githubusercontent.com/${REPO}/${BRANCH}/signed"
+          {
+            echo "# Install links"
+            echo ""
+            echo "Tap each link below **on your iPhone** (Settings → Shortcuts → **Allow Untrusted Shortcuts** must be ON):"
+            echo ""
+            for f in signed/*.shortcut; do
+              name=$(basename "$f")
+              url="${BASE}/${name}"
+              enc=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$url")
+              echo "- **${name%.shortcut}** → [shortcuts://import-shortcut?url=${enc}](shortcuts://import-shortcut?url=${enc})"
+              echo "  (raw URL: \`${url}\`)"
+            done
+          } > signed/INSTALL.md
+          cat signed/INSTALL.md
+
+      - name: Commit & push signed shortcuts
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add signed/
+          if git diff --staged --quiet; then
+            echo "no changes to signed files"
+          else
+            git commit -m "ci: rebuild signed shortcuts [skip ci]"
+            git push
+          fi
