@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-sign-publish:
-    runs-on: macos-latest    # macOS 14+; ships with the `shortcuts` CLI
+    runs-on: macos-14        # macOS 14 (Sonoma) — macos-15 has a bug in the `shortcuts` CLI
     steps:
       - name: Check out
         uses: actions/checkout@v4
