@@ -29,7 +29,7 @@ jobs:
           mkdir -p signed
           for f in *.shortcut; do
             echo "signing $f"
-            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode anyone --input "$f" --output "signed/$f" \
+            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode people-who-know-me --input "$f" --output "signed/$f" \
               && echo "  ✓ signed $f" \
               || { echo "  WARNING: signing $f failed — using unsigned fallback" \
                    && cp "$f" "signed/$f"; }
@@ -64,7 +64,7 @@ jobs:
             echo "3. Tap install again"
             echo ""
             echo "### Signing locally (optional)"
-            echo 'To sign yourself on a Mac with iCloud: `shortcuts sign --mode anyone -i file.shortcut -o signed/file.shortcut`'
+                echo 'To sign yourself on a Mac: `shortcuts sign --mode anyone -i file.shortcut -o signed/file.shortcut` (anyone mode requires iCloud; people-who-know-me signs locally)'
           } > signed/INSTALL.md
           cat signed/INSTALL.md
 
