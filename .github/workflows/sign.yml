@@ -24,18 +24,52 @@ jobs:
       - name: Build unsigned shortcuts
         run: python3 build.py
 
-      - name: Sign shortcuts (try, then fall back to unsigned)
+      - name: Diagnose & sign shortcuts
         run: |
           mkdir -p signed
+
+          # --- diagnostic info saved to file for debugging ---
+          {
+            echo "=== shortcuts CLI ==="
+            shortcuts --version 2>&1 || true
+            echo ""
+            echo "=== sign help ==="
+            shortcuts sign --help 2>&1 || true
+            echo ""
+            echo "=== security find-identity ==="
+            security find-identity -v -p basic 2>&1 || true
+            echo ""
+            echo "=== codesign identities ==="
+            security find-identity -v -p codesigning 2>&1 || true
+            echo ""
+            echo "=== default keychain ==="
+            security default-keychain 2>&1 || true
+            echo ""
+            echo "=== list keychains ==="
+            security list-keychains 2>&1 || true
+            echo ""
+            echo "=== Shortcuts app exists ==="
+            ls -la /System/Applications/Shortcuts.app 2>&1 || true
+            echo ""
+            echo "=== Shortcuts system app exists ==="
+            ls -la /Applications/Shortcuts.app 2>&1 || true
+            echo ""
+          } > signed/DEBUG.md
+
           for f in *.shortcut; do
-            echo "signing $f"
-            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode people-who-know-me --input "$f" --output "signed/$f" 2>"$f.sign_err" \
+            echo "=== signing $f ==="
+            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode people-who-know-me \
+              --input "$f" --output "signed/$f" 2>"$f.stderr" 1>"$f.stdout" \
               && echo "  ✓ signed $f" \
-              || { err=$(cat "$f.sign_err"); echo "  WARNING: signing $f failed: $err" \
+              || { err=$(cat "$f.stderr"); echo "  WARNING: signing $f failed: $err" \
+                   && { echo "--- $f sign stderr ---" >> signed/DEBUG.md
+                        cat "$f.stderr" >> signed/DEBUG.md
+                        echo "" >> signed/DEBUG.md; } \
                    && cp "$f" "signed/$f"; }
-            rm -f "$f.sign_err"
+            rm -f "$f.stderr" "$f.stdout"
           done
           ls -la signed/
+          cat signed/DEBUG.md
 
       - name: Write install index
         env:
