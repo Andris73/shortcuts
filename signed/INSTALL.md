@@ -15,4 +15,4 @@ To install, tap a link **on your iPhone** with Safari.
 3. Tap install again
 
 ### Signing locally (optional)
-To sign yourself on a Mac with iCloud: `shortcuts sign --mode anyone -i file.shortcut -o signed/file.shortcut`
+To sign yourself on a Mac: `shortcuts sign --mode anyone -i file.shortcut -o signed/file.shortcut` (anyone mode requires iCloud; people-who-know-me signs locally)
