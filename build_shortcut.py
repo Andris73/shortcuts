@@ -125,6 +125,7 @@ def set_variable(name: str, source_uuid: str, source_name: str = "Output") -> di
     return {
         "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
         "WFWorkflowActionParameters": {
+            "UUID": new_uuid(),
             "WFVariableName": name,
             "WFInput": var_ref(source_uuid, source_name),
         },
@@ -136,6 +137,7 @@ def get_variable(name: str) -> dict:
     return {
         "WFWorkflowActionIdentifier": "is.workflow.actions.getvariable",
         "WFWorkflowActionParameters": {
+            "UUID": new_uuid(),
             "WFVariable": named_var_ref(name),
         },
     }
@@ -386,6 +388,7 @@ def if_block(condition_source_uuid: str, op: int = 4, compare_to: str = "",
         "WFWorkflowActionParameters": {
             "GroupingIdentifier": g,
             "WFControlFlowMode": 0,
+            "UUID": new_uuid(),
             "WFInput": var_ref(condition_source_uuid),
             "WFCondition": op,
             "WFConditionalActionString": text_value(compare_to),
@@ -396,6 +399,7 @@ def if_block(condition_source_uuid: str, op: int = 4, compare_to: str = "",
         "WFWorkflowActionParameters": {
             "GroupingIdentifier": g,
             "WFControlFlowMode": 1,
+            "UUID": new_uuid(),
         },
     }
     end_if = {
@@ -421,6 +425,7 @@ def repeat_each(list_source_uuid: str, group_uuid: str | None = None) -> tuple[d
         "WFWorkflowActionParameters": {
             "GroupingIdentifier": g,
             "WFControlFlowMode": 0,
+            "UUID": new_uuid(),
             "WFInput": var_ref(list_source_uuid),
         },
     }
@@ -477,7 +482,7 @@ def demo_minimal() -> dict:
 if __name__ == "__main__":
     sc = demo_minimal()
     with open("hello-name.shortcut", "wb") as f:
-        # binary plist; Shortcuts also accepts XML plists with the .shortcut extension
-        plistlib.dump(sc, f, fmt=plistlib.FMT_BINARY)
+        # XML plist; Shortcuts accepts both XML and binary .shortcut files
+        plistlib.dump(sc, f, fmt=plistlib.FMT_XML)
     print("Wrote hello-name.shortcut")
     print("Now sign on a Mac:  shortcuts sign --mode anyone -i hello-name.shortcut -o hello-name-signed.shortcut")

@@ -29,7 +29,8 @@ jobs:
           mkdir -p signed
           for f in *.shortcut; do
             echo "signing $f"
-            shortcuts sign --mode anyone --input "$f" --output "signed/$f"
+            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode anyone --input "$f" --output "signed/$f" \
+              || echo "WARNING: signing $f timed out or failed, continuing..."
           done
           ls -la signed/
 

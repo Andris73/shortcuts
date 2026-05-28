@@ -156,6 +156,7 @@ def if_contains(input_attachment, compare,
         "WFWorkflowActionParameters": {
             "GroupingIdentifier": g,
             "WFControlFlowMode": 0,
+            "UUID": new_uuid(),
             "WFInput": wf_input,
             "WFCondition": 4,                       # 4 = Contains
             "WFConditionalActionString": _wrap_value(compare),
@@ -340,7 +341,7 @@ def make_padel_code() -> dict:
 
 def _save(sc: dict, path: str | Path) -> None:
     with open(path, "wb") as f:
-        plistlib.dump(sc, f, fmt=plistlib.FMT_BINARY)
+        plistlib.dump(sc, f, fmt=plistlib.FMT_XML)
     print(f"wrote {path}")
 
 
