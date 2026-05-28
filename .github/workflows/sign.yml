@@ -24,13 +24,15 @@ jobs:
       - name: Build unsigned shortcuts
         run: python3 build.py
 
-      - name: Sign shortcuts (--mode anyone)
+      - name: Sign shortcuts (try, then fall back to unsigned)
         run: |
           mkdir -p signed
           for f in *.shortcut; do
             echo "signing $f"
             perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode anyone --input "$f" --output "signed/$f" \
-              || echo "WARNING: signing $f timed out or failed, continuing..."
+              && echo "  ✓ signed $f" \
+              || { echo "  WARNING: signing $f failed — using unsigned fallback" \
+                   && cp "$f" "signed/$f"; }
           done
           ls -la signed/
 
@@ -39,20 +41,30 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
-          # URL of the signed files on raw.githubusercontent.com
           BASE="https://raw.githubusercontent.com/${REPO}/${BRANCH}/signed"
           {
             echo "# Install links"
             echo ""
-            echo "Tap each link below **on your iPhone** (Settings → Shortcuts → **Allow Untrusted Shortcuts** must be ON):"
+            echo "To install, tap a link **on your iPhone** with Safari."
             echo ""
+            echo "| Shortcut | Install |"
+            echo "|----------|---------|"
             for f in signed/*.shortcut; do
               name=$(basename "$f")
               url="${BASE}/${name}"
               enc=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$url")
-              echo "- **${name%.shortcut}** → [shortcuts://import-shortcut?url=${enc}](shortcuts://import-shortcut?url=${enc})"
-              echo "  (raw URL: \`${url}\`)"
+              echo "| ${name%.shortcut} | [Install](shortcuts://import-shortcut?url=${enc}) |"
             done
+            echo ""
+            echo "---"
+            echo ""
+            echo "### If shortcuts won't import"
+            echo "1. Open **Settings → Shortcuts**"
+            echo "2. Enable **Allow Untrusted Shortcuts**"
+            echo "3. Tap install again"
+            echo ""
+            echo "### Signing locally (optional)"
+            echo 'To sign yourself on a Mac with iCloud: `shortcuts sign --mode anyone -i file.shortcut -o signed/file.shortcut`'
           } > signed/INSTALL.md
           cat signed/INSTALL.md
 
