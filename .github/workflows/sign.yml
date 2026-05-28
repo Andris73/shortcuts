@@ -29,10 +29,11 @@ jobs:
           mkdir -p signed
           for f in *.shortcut; do
             echo "signing $f"
-            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode people-who-know-me --input "$f" --output "signed/$f" \
+            perl -e 'alarm shift; exec @ARGV' 120 shortcuts sign --mode people-who-know-me --input "$f" --output "signed/$f" 2>"$f.sign_err" \
               && echo "  ✓ signed $f" \
-              || { echo "  WARNING: signing $f failed — using unsigned fallback" \
+              || { err=$(cat "$f.sign_err"); echo "  WARNING: signing $f failed: $err" \
                    && cp "$f" "signed/$f"; }
+            rm -f "$f.sign_err"
           done
           ls -la signed/
 
